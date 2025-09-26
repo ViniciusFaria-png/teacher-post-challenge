@@ -7,6 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "lint:fix": "eslint --fix \"src/**/*.{js,jsx,ts,tsx}\"",
+    "fm:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
+    "fm:fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "lint:print": "npx eslint --print-config eslint.config.mjs > eslint-show-config.json",
     "preview": "vite preview",
     "fix:all": "npm run lint:fix && npm run format:fix"
   },
@@ -15,6 +19,7 @@
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.2.1",
     "@iconify/react": "^6.0.1",
+    "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
     "@mui/system": "^7.3.2",
     "@mui/x-data-grid": "^8.11.1",
