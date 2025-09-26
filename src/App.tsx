@@ -1,8 +1,8 @@
 import "./App.css";
-import PostsPage from "./pages/PostPage";
+import TestPosts from "./pages/TestPosts";
 
 function App() {
-  return <PostsPage />;
+  return <TestPosts />;
 }
 
 export default App;
