@@ -243,7 +243,7 @@ export default function PostsWithAuth() {
       ) : (
         <Grid container spacing={3}>
           {posts.map((post) => (
-            <Grid item xs={12} md={6} lg={4} key={post.id}>
+            <Grid item xs={12} md={6} lg={4} key={post.id} {...({} as any)}>
               <Card
                 sx={{
                   height: "100%",
