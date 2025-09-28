@@ -18,4 +18,5 @@ export default axiosInstance;
 export const endpoints = {
   posts: "/posts",
   user: "/user",
+  teacher: "/teacher",
 };
