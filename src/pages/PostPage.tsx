@@ -1,4 +1,3 @@
-// src/pages/PostPage.tsx
 import {
   Alert,
   Box,
@@ -17,7 +16,7 @@ import { useNavigate } from "react-router";
 import { signIn } from "../actions/auth";
 import { getPosts } from "../actions/posts";
 import PostCard from "../components/PostCard";
-import AppLayout from "../components/layout/AppLayout"; // Importa o novo Layout
+import AppLayout from "../components/layout/AppLayout";
 import { paths } from "../routes/paths";
 import type { IPost } from "../types/post";
 
@@ -27,7 +26,6 @@ export default function PostPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Lógica de autenticação e modal
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", senha: "" });
@@ -45,7 +43,7 @@ export default function PostPage() {
       setError(null);
       const postsData = await getPosts();
       setPosts(postsData);
-    } catch (err) {
+    } catch {
       setError("Erro ao carregar posts. Verifique sua conexão.");
     } finally {
       setLoading(false);
@@ -58,11 +56,11 @@ export default function PostPage() {
     setError(null);
     try {
       await signIn(loginData);
-      localStorage.setItem("token", "dummy-token"); // Simula a obtenção de um token
+      localStorage.setItem("token", "dummy-token");
       setIsAuthenticated(true);
       setLoginOpen(false);
       setLoginData({ email: "", senha: "" });
-    } catch (err) {
+    } catch {
       setError("Email ou senha inválidos.");
     } finally {
       setLoginLoading(false);
@@ -121,7 +119,6 @@ export default function PostPage() {
         {renderContent()}
       </Container>
 
-      {/* O Dialog de Login continua sendo gerenciado pela página */}
       <Dialog
         open={loginOpen}
         onClose={() => setLoginOpen(false)}

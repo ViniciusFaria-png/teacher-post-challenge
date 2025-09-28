@@ -14,6 +14,7 @@ export async function createPost(post: {
   titulo: string;
   conteudo: string;
   resumo?: string;
+  professor_id: number;
 }) {
   const res = await axiosInstance.post(endpoints.posts, post);
   return res.data;

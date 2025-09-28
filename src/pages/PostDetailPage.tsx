@@ -12,26 +12,22 @@ import {
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { getPost } from "../actions/posts";
-import AppLayout from "../components/layout/AppLayout"; // Reutilizamos nosso layout
+import AppLayout from "../components/layout/AppLayout";
 import { useProfessorName } from "../hooks/useProfessorName";
 import { paths } from "../routes/paths";
 import type { IPost } from "../types/post";
 
 export default function PostDetailPage() {
-  // Hook para pegar parâmetros da URL. O nome "id" deve corresponder ao definido na rota (`/posts/:id`)
   const { id } = useParams<{ id: string }>();
 
   const [post, setPost] = useState<IPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Reutilizando o hook para buscar o nome do professor.
-  // A busca só é ativada quando 'post?.professor_id' tiver um valor.
   const { professorName, isLoading: professorLoading } = useProfessorName(
     post?.professor_id ?? "",
   );
 
-  // Busca os dados do post quando o componente é montado ou quando o `id` da URL muda
   useEffect(() => {
     const fetchPost = async () => {
       if (!id) {
@@ -44,7 +40,7 @@ export default function PostDetailPage() {
         setError(null);
         const postData = await getPost(id);
         setPost(postData);
-      } catch (err) {
+      } catch {
         setError(
           "Erro ao carregar o post. Ele pode não existir ou a conexão falhou.",
         );
@@ -67,7 +63,6 @@ export default function PostDetailPage() {
 
   const renderContent = () => {
     if (loading) {
-      // Usando Skeletons para uma experiência de carregamento mais profissional
       return (
         <Box>
           <Skeleton variant="text" width="80%" height={70} sx={{ mb: 1 }} />
@@ -122,7 +117,6 @@ export default function PostDetailPage() {
 
         <Divider sx={{ mb: 3 }} />
 
-        {/* Usamos whiteSpace: 'pre-wrap' para respeitar quebras de linha e parágrafos do conteúdo */}
         <Typography
           variant="body1"
           sx={{ fontSize: "1.1rem", lineHeight: 1.7, whiteSpace: "pre-wrap" }}
@@ -134,8 +128,6 @@ export default function PostDetailPage() {
   };
 
   return (
-    // Envolvemos a página no AppLayout para manter a Navbar e o Footer
-    // OBS: Em uma app real, o estado de autenticação viria de um Contexto global, não por props aqui.
     <AppLayout
       isAuthenticated={false}
       onLoginClick={() => {}}
@@ -144,8 +136,8 @@ export default function PostDetailPage() {
     >
       <Container maxWidth="md" sx={{ py: { xs: 3, sm: 5 } }}>
         <Button
-          component={Link} // Usamos o componente Link do react-router-dom
-          to={paths.posts.root} // Usamos o objeto `paths` para o link de "voltar"
+          component={Link}
+          to={paths.posts.root}
           startIcon={<ArrowBack />}
           sx={{ mb: 3 }}
         >

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { getTeacher } from "../actions/teacher";
 import type { ITeacher } from "../types/teacher";
 
-// Adicionamos 'export' para que ele possa ser importado em outros arquivos
 export const useProfessorName = (professorId: string) => {
   const [professorName, setProfessorName] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);

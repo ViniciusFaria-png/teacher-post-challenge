@@ -8,15 +8,15 @@ export default function Footer() {
       component="footer"
       sx={{
         py: 3,
-        px: 2,
-        mt: "auto", // Essencial para o "sticky footer"
+        mt: "auto",
+        width: "100%",
         backgroundColor: (theme) =>
           theme.palette.mode === "light"
             ? theme.palette.grey[200]
             : theme.palette.grey[800],
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
         <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
           <School color="action" fontSize="small" />
           <Typography variant="body2" color="text.secondary" align="center">

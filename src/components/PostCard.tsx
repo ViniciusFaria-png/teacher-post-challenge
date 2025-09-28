@@ -17,7 +17,6 @@ import React from "react";
 import { useProfessorName } from "../hooks/useProfessorName";
 import type { IPost } from "../types/post";
 
-// --- Props do Componente ---
 interface PostCardProps {
   post: IPost;
   isProfessor: boolean;
@@ -26,7 +25,6 @@ interface PostCardProps {
   onDelete?: (post: IPost) => void;
 }
 
-// --- Componente PostCard ---
 export default function PostCard({
   post,
   isProfessor,
@@ -65,20 +63,18 @@ export default function PostCard({
         transition: "transform 0.2s ease, box-shadow 0.2s ease",
         "&:hover": {
           transform: "translateY(-4px)",
-          boxShadow: 6, // Utiliza a sombra de elevação 6 do tema
+          boxShadow: 6,
         },
       }}
     >
-      {/* Conteúdo principal com padding responsivo */}
       <CardContent sx={{ flexGrow: 1, p: { xs: 2, sm: 3 } }}>
-        {/* Cabeçalho do Card */}
         <Box mb={2}>
           <Typography
             variant="h5"
             component="h2"
             fontWeight="bold"
             gutterBottom
-            sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" } }} // Fonte responsiva
+            sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
           >
             {post.titulo}
           </Typography>
@@ -93,7 +89,6 @@ export default function PostCard({
           )}
         </Box>
 
-        {/* Trecho do conteúdo com truncamento */}
         <Typography
           variant="body1"
           color="text.secondary"
@@ -108,7 +103,6 @@ export default function PostCard({
           {post.conteudo}
         </Typography>
 
-        {/* Metadados (Autor e Data) */}
         <Stack
           direction="column"
           spacing={0.5}
@@ -129,7 +123,6 @@ export default function PostCard({
         </Stack>
       </CardContent>
 
-      {/* Ações do Card */}
       <CardActions sx={{ justifyContent: "flex-end", pt: 0, px: 1 }}>
         <IconButton
           aria-label="opções do post"

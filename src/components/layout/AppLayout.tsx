@@ -17,25 +17,21 @@ export default function AppLayout({
   isAuthenticated,
   onLoginClick,
   onLogout,
-  onAddPostClick,
 }: AppLayoutProps) {
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: "column",
-        minHeight: "100vh", // Garante que o layout ocupe a tela toda
+        minHeight: "100vh",
       }}
     >
       <Navbar
         isAuthenticated={isAuthenticated}
         onLoginClick={onLoginClick}
         onLogout={onLogout}
-        onAddPostClick={onAddPostClick}
       />
       <Box component="main" sx={{ flexGrow: 1 }}>
-        {" "}
-        {/* Conteúdo principal cresce para empurrar o footer */}
         {children}
       </Box>
       <Footer />

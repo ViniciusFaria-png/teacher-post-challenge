@@ -1,4 +1,3 @@
-// src/components/layout/Navbar.tsx
 import { Add, Login, Logout, School } from "@mui/icons-material";
 import {
   AppBar,
@@ -10,26 +9,31 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { useNavigate } from "react-router";
+import { paths } from "../../routes/paths";
 
 interface NavbarProps {
   isAuthenticated: boolean;
   onLoginClick: () => void;
   onLogout: () => void;
-  onAddPostClick: () => void; // Ação para criar post
 }
 
 export default function Navbar({
   isAuthenticated,
   onLoginClick,
   onLogout,
-  onAddPostClick,
 }: NavbarProps) {
+  const navigate = useNavigate();
+
+  const handleAddPostClick = () => {
+    navigate(paths.posts.create);
+  };
+
   return (
     <AppBar position="sticky">
       <Container maxWidth="lg">
         <Toolbar disableGutters>
-          {/* Logo e Nome */}
-          <School sx={{ display: "flex", mr: 1 }} />
+          <School sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
           <Typography
             variant="h6"
             noWrap
@@ -37,32 +41,45 @@ export default function Navbar({
             href="/"
             sx={{
               mr: 2,
-              display: { xs: "none", md: "flex" }, // Oculta em telas pequenas
+              display: { xs: "none", md: "flex" },
               fontFamily: "monospace",
               fontWeight: 700,
               letterSpacing: ".1rem",
               color: "inherit",
               textDecoration: "none",
-              flexGrow: 1,
             }}
           >
             Blog EducaTech
           </Typography>
 
-          {/* Logo Mobile (ocupa espaço para o menu ir para a direita) */}
+          <School sx={{ display: { xs: "flex", md: "none" }, mr: 1 }} />
           <Typography
             variant="h5"
-            sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}
-          />
+            noWrap
+            component="a"
+            href="/"
+            sx={{
+              mr: 2,
+              display: { xs: "flex", md: "none" },
+              flexGrow: 1,
+              fontFamily: "monospace",
+              fontWeight: 700,
+              letterSpacing: ".1rem",
+              color: "inherit",
+              textDecoration: "none",
+            }}
+          >
+            Blog EducaTech
+          </Typography>
 
-          {/* Botões de Ação */}
-          <Box>
+          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }} />
+
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             {isAuthenticated ? (
               <>
-                {/* Botão para telas grandes */}
                 <Button
                   color="inherit"
-                  onClick={onAddPostClick}
+                  onClick={handleAddPostClick}
                   startIcon={<Add />}
                   sx={{ display: { xs: "none", sm: "inline-flex" } }}
                 >
@@ -77,29 +94,21 @@ export default function Navbar({
                   Logout
                 </Button>
 
-                {/* Ícones para telas pequenas */}
-                <Tooltip title="Adicionar Post">
-                  <IconButton
-                    color="inherit"
-                    onClick={onAddPostClick}
-                    sx={{ display: { sm: "none" } }}
-                  >
-                    <Add />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Logout">
-                  <IconButton
-                    color="inherit"
-                    onClick={onLogout}
-                    sx={{ display: { sm: "none" } }}
-                  >
-                    <Logout />
-                  </IconButton>
-                </Tooltip>
+                <Box sx={{ display: { xs: "flex", sm: "none" }, gap: 1 }}>
+                  <Tooltip title="Adicionar Post">
+                    <IconButton color="inherit" onClick={handleAddPostClick}>
+                      <Add />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Logout">
+                    <IconButton color="inherit" onClick={onLogout}>
+                      <Logout />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </>
             ) : (
               <>
-                {/* Botão para telas grandes */}
                 <Button
                   color="inherit"
                   onClick={onLoginClick}
@@ -108,7 +117,7 @@ export default function Navbar({
                 >
                   Sign In
                 </Button>
-                {/* Ícone para telas pequenas */}
+
                 <Tooltip title="Sign In">
                   <IconButton
                     color="inherit"
