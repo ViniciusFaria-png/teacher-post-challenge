@@ -37,5 +37,5 @@ export async function searchPosts(query: string) {
   const res = await axiosInstance.get(`${endpoints.posts}/search`, {
     params: { query },
   });
-  return res.data.posts;
+  return res.data;
 }
