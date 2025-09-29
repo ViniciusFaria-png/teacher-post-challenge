@@ -5,11 +5,12 @@ import {
   CircularProgress,
   Container,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { deletePost, getPosts } from "../actions/posts";
+import { deletePost, getPosts, searchPosts } from "../actions/posts";
 import LoginDialog from "../components/LoginDialog";
 import PostCard from "../components/PostCard";
 import AppLayout from "../components/layout/AppLayout";
@@ -19,11 +20,12 @@ import type { IPost } from "../types/post";
 
 export default function PostPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, login, logout, user } = useAuth(); // Usar o AuthContext
+  const { isAuthenticated, login, logout, user } = useAuth();
 
   const [posts, setPosts] = useState<IPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Estados para login dialog
   const [loginOpen, setLoginOpen] = useState(false);
@@ -46,6 +48,24 @@ export default function PostPage() {
       console.error("Erro ao buscar posts:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.length > 2 || query.length === 0) {
+      try {
+        setLoading(true);
+        setError(null);
+        const postsData =
+          query.length === 0 ? await getPosts() : await searchPosts(query);
+        setPosts(postsData);
+      } catch (err) {
+        setError("Erro ao buscar posts. Tente novamente.");
+        console.error("Erro ao buscar posts:", err);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -159,6 +179,16 @@ export default function PostPage() {
           <Typography variant="h6" color="text.secondary">
             Compartilhando conhecimento educacional
           </Typography>
+        </Box>
+
+        <Box mb={4}>
+          <TextField
+            fullWidth
+            label="Buscar por posts"
+            variant="outlined"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
         </Box>
 
         {renderContent()}
