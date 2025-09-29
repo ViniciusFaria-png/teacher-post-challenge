@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import "./App.css";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthProvider";
 import PostCreateEditPage from "./pages/PostCreateEditPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import PostPage from "./pages/PostPage";

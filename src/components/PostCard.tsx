@@ -1,4 +1,3 @@
-// src/components/PostCard.tsx
 import { Delete, Edit, MoreVert, Visibility } from "@mui/icons-material";
 import {
   Box,

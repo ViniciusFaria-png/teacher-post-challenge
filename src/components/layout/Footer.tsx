@@ -1,4 +1,3 @@
-// src/components/layout/Footer.tsx
 import { School } from "@mui/icons-material";
 import { Box, Container, Link, Typography } from "@mui/material";
 

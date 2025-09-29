@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { createPost, getPost, updatePost } from "../actions/posts";
 import AppLayout from "../components/layout/AppLayout";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { paths } from "../routes/paths";
 
 interface FormState {
@@ -27,7 +27,7 @@ export default function PostCreateEditPage() {
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
 
-  const { user } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const [formState, setFormState] = useState<FormState>({
     titulo: "",
@@ -40,18 +40,42 @@ export default function PostCreateEditPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isEditMode && id) {
+    if (!isAuthenticated) {
+      navigate(paths.posts.root);
+      return;
+    }
+
+    if (!user?.isProfessor) {
+      setError("Apenas professores podem criar/editar posts.");
+      return;
+    }
+
+    if (!user?.professorId) {
+      setError("ID do professor não encontrado. Faça login novamente.");
+      return;
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  useEffect(() => {
+    if (isEditMode && id && user?.professorId) {
       const fetchPostData = async () => {
         try {
           setLoading(true);
           setError(null);
           const postData = await getPost(id);
+
+          if (String(postData.professor_id) !== String(user.professorId)) {
+            setError("Você não tem permissão para editar este post.");
+            return;
+          }
+
           setFormState({
             titulo: postData.titulo || "",
             resumo: postData.resumo || "",
             conteudo: postData.conteudo || "",
           });
-        } catch {
+        } catch (err) {
+          console.error("Erro ao carregar post:", err);
           setError("Não foi possível carregar os dados do post para edição.");
         } finally {
           setLoading(false);
@@ -59,7 +83,7 @@ export default function PostCreateEditPage() {
       };
       fetchPostData();
     }
-  }, [id, isEditMode]);
+  }, [id, isEditMode, user?.professorId]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -77,20 +101,26 @@ export default function PostCreateEditPage() {
       return;
     }
 
+    if (!user?.isProfessor) {
+      setError("Apenas professores podem criar/editar posts.");
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     setSuccessMessage(null);
-
-    const postData = {
-      ...formState,
-      professor_id: user.professorId,
-    };
 
     try {
       if (isEditMode && id) {
         await updatePost(id, formState);
         setSuccessMessage("Post atualizado com sucesso!");
       } else {
+        const postData = {
+          ...formState,
+          professor_id: user.professorId,
+        };
+
+        console.log("Criando post com dados:", postData);
         await createPost(postData);
         setSuccessMessage("Post criado com sucesso!");
       }
@@ -99,6 +129,7 @@ export default function PostCreateEditPage() {
         navigate(paths.posts.root);
       }, 1500);
     } catch (err) {
+      console.error("Erro ao salvar post:", err);
       const errorMessage =
         err instanceof Error ? err.message : "Ocorreu um erro desconhecido.";
       setError(
@@ -109,7 +140,43 @@ export default function PostCreateEditPage() {
     }
   };
 
+  useEffect(() => {
+    if (user) {
+      console.log("Dados do usuário logado:", {
+        id: user.id,
+        email: user.email,
+        isProfessor: user.isProfessor,
+        professorId: user.professorId,
+        professorName: user.professorName,
+      });
+    }
+  }, [user]);
+
   const renderForm = () => {
+    if (!isAuthenticated) {
+      return (
+        <Alert severity="warning">
+          Você precisa estar logado para acessar esta página.
+        </Alert>
+      );
+    }
+
+    if (!user?.isProfessor) {
+      return (
+        <Alert severity="error">
+          Apenas professores podem criar/editar posts.
+        </Alert>
+      );
+    }
+
+    if (!user?.professorId) {
+      return (
+        <Alert severity="error">
+          ID do professor não encontrado. Faça login novamente.
+        </Alert>
+      );
+    }
+
     if (loading) {
       return (
         <Box textAlign="center" py={10}>
@@ -141,6 +208,7 @@ export default function PostCreateEditPage() {
           margin="normal"
           variant="outlined"
           disabled={submitting}
+          helperText="Um breve resumo do seu post"
         />
         <TextField
           label="Conteúdo Completo"
@@ -154,6 +222,7 @@ export default function PostCreateEditPage() {
           margin="normal"
           variant="outlined"
           disabled={submitting}
+          helperText="Escreva o conteúdo completo do seu post"
         />
         <Button
           type="submit"
@@ -177,12 +246,9 @@ export default function PostCreateEditPage() {
 
   return (
     <AppLayout
-      isAuthenticated={true} // Assumindo que o usuário deve estar autenticado para acessar esta página
+      isAuthenticated={isAuthenticated}
       onLoginClick={() => {}}
-      onLogout={() => {
-        localStorage.removeItem("token");
-        navigate(paths.posts.root);
-      }}
+      onLogout={logout}
       onAddPostClick={() => {}}
     >
       <Container maxWidth="md" sx={{ py: { xs: 3, sm: 5 } }}>
@@ -209,6 +275,13 @@ export default function PostCreateEditPage() {
               ? "Ajuste as informações necessárias e salve as alterações."
               : "Preencha os campos abaixo para compartilhar um novo conteúdo."}
           </Typography>
+
+          {user && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Logado como: {user.email} | Professor ID: {user.professorId} | É
+              Professor: {user.isProfessor ? "Sim" : "Não"}
+            </Alert>
+          )}
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>

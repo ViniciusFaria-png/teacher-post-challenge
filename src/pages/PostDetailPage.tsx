@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { getPost } from "../actions/posts";
 import AppLayout from "../components/layout/AppLayout";
+import { useAuth } from "../hooks/useAuth";
 import { useProfessorName } from "../hooks/useProfessorName";
 import { paths } from "../routes/paths";
 import type { IPost } from "../types/post";
@@ -23,6 +24,8 @@ export default function PostDetailPage() {
   const [post, setPost] = useState<IPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { isAuthenticated, logout } = useAuth();
 
   const { professorName, isLoading: professorLoading } = useProfessorName(
     post?.professor_id ?? "",
@@ -129,9 +132,9 @@ export default function PostDetailPage() {
 
   return (
     <AppLayout
-      isAuthenticated={false}
+      isAuthenticated={isAuthenticated}
       onLoginClick={() => {}}
-      onLogout={() => {}}
+      onLogout={logout}
       onAddPostClick={() => {}}
     >
       <Container maxWidth="md" sx={{ py: { xs: 3, sm: 5 } }}>
