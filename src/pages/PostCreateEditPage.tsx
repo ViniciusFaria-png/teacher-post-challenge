@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { createPost, getPost, updatePost } from "../actions/posts";
 import AppLayout from "../components/layout/AppLayout";
+import LoginDialog from "../components/LoginDialog";
 import { useAuth } from "../hooks/useAuth";
 import { paths } from "../routes/paths";
 
@@ -27,7 +28,7 @@ export default function PostCreateEditPage() {
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
 
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, login } = useAuth();
 
   const [formState, setFormState] = useState<FormState>({
     titulo: "",
@@ -85,6 +86,12 @@ export default function PostCreateEditPage() {
     }
   }, [id, isEditMode, user?.professorId]);
 
+  // Estados para login dialog
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginData, setLoginData] = useState({ email: "", senha: "" });
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormState((prevState) => ({
@@ -93,8 +100,36 @@ export default function PostCreateEditPage() {
     }));
   };
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    setLoginError(null);
+
+    try {
+      await login(loginData.email, loginData.senha);
+      setLoginOpen(false);
+      setLoginData({ email: "", senha: "" });
+    } catch (err) {
+      setLoginError(
+        err instanceof Error ? err.message : "Email ou senha inválidos.",
+      );
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Sessão expirada. Faça login novamente.");
+      setTimeout(() => {
+        logout();
+        navigate(paths.posts.root);
+      }, 2000);
+      return;
+    }
 
     if (!user?.professorId) {
       setError("ID do professor não encontrado. Faça login novamente.");
@@ -247,7 +282,7 @@ export default function PostCreateEditPage() {
   return (
     <AppLayout
       isAuthenticated={isAuthenticated}
-      onLoginClick={() => {}}
+      onLoginClick={() => setLoginOpen(true)}
       onLogout={logout}
       onAddPostClick={() => {}}
     >
@@ -297,6 +332,19 @@ export default function PostCreateEditPage() {
           {renderForm()}
         </Paper>
       </Container>
+      <LoginDialog
+        open={loginOpen}
+        onClose={() => {
+          setLoginOpen(false);
+          setLoginError(null);
+          setLoginData({ email: "", senha: "" });
+        }}
+        onSubmit={handleLogin}
+        loginData={loginData}
+        setLoginData={setLoginData}
+        loading={loginLoading}
+        error={loginError}
+      />
     </AppLayout>
   );
 }

@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { getPost } from "../actions/posts";
 import AppLayout from "../components/layout/AppLayout";
+import LoginDialog from "../components/LoginDialog";
 import { useAuth } from "../hooks/useAuth";
 import { useProfessorName } from "../hooks/useProfessorName";
 import { paths } from "../routes/paths";
@@ -25,7 +26,13 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { isAuthenticated, logout } = useAuth();
+  // Estados para login dialog
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginData, setLoginData] = useState({ email: "", senha: "" });
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const { isAuthenticated, logout, login } = useAuth();
 
   const { professorName, isLoading: professorLoading } = useProfessorName(
     post?.professor_id ?? "",
@@ -54,6 +61,24 @@ export default function PostDetailPage() {
 
     fetchPost();
   }, [id]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    setLoginError(null);
+
+    try {
+      await login(loginData.email, loginData.senha);
+      setLoginOpen(false);
+      setLoginData({ email: "", senha: "" });
+    } catch (err) {
+      setLoginError(
+        err instanceof Error ? err.message : "Email ou senha inválidos.",
+      );
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
@@ -133,7 +158,7 @@ export default function PostDetailPage() {
   return (
     <AppLayout
       isAuthenticated={isAuthenticated}
-      onLoginClick={() => {}}
+      onLoginClick={() => setLoginOpen(true)}
       onLogout={logout}
       onAddPostClick={() => {}}
     >
@@ -148,6 +173,20 @@ export default function PostDetailPage() {
         </Button>
         {renderContent()}
       </Container>
+
+      <LoginDialog
+        open={loginOpen}
+        onClose={() => {
+          setLoginOpen(false);
+          setLoginError(null);
+          setLoginData({ email: "", senha: "" });
+        }}
+        onSubmit={handleLogin}
+        loginData={loginData}
+        setLoginData={setLoginData}
+        loading={loginLoading}
+        error={loginError}
+      />
     </AppLayout>
   );
 }
