@@ -4,16 +4,13 @@ import {
   Button,
   CircularProgress,
   Container,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { deletePost, getPosts } from "../actions/posts";
+import LoginDialog from "../components/LoginDialog";
 import PostCard from "../components/PostCard";
 import AppLayout from "../components/layout/AppLayout";
 import { useAuth } from "../hooks/useAuth";
@@ -167,70 +164,19 @@ export default function PostPage() {
         {renderContent()}
       </Container>
 
-      {/* Login Dialog */}
-      <Dialog
+      <LoginDialog
         open={loginOpen}
         onClose={() => {
           setLoginOpen(false);
           setLoginError(null);
           setLoginData({ email: "", senha: "" });
         }}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Acesso do Professor</DialogTitle>
-        <DialogContent>
-          <Box component="form" onSubmit={handleLogin} sx={{ mt: 1 }}>
-            {loginError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {loginError}
-              </Alert>
-            )}
-
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              value={loginData.email}
-              onChange={(e) =>
-                setLoginData((prev) => ({ ...prev, email: e.target.value }))
-              }
-              margin="normal"
-              required
-              disabled={loginLoading}
-              autoComplete="email"
-            />
-
-            <TextField
-              fullWidth
-              label="Senha"
-              type="password"
-              value={loginData.senha}
-              onChange={(e) =>
-                setLoginData((prev) => ({ ...prev, senha: e.target.value }))
-              }
-              margin="normal"
-              required
-              disabled={loginLoading}
-              autoComplete="current-password"
-            />
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2, py: 1.5 }}
-              disabled={loginLoading}
-            >
-              {loginLoading ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                "Entrar"
-              )}
-            </Button>
-          </Box>
-        </DialogContent>
-      </Dialog>
+        onSubmit={handleLogin}
+        loginData={loginData}
+        setLoginData={setLoginData}
+        loading={loginLoading}
+        error={loginError}
+      />
     </AppLayout>
   );
 }
