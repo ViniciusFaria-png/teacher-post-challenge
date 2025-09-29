@@ -1,69 +1,52 @@
-import { DateRange, Login, Person, School } from "@mui/icons-material";
 import {
   Alert,
   Box,
   Button,
-  Card,
-  CardContent,
-  Chip,
   CircularProgress,
   Container,
-  Divider,
-  Grid,
-  Paper,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { signIn } from "../actions/auth";
-import { getPosts } from "../actions/posts";
+import { useNavigate } from "react-router";
+import { deletePost, getPosts } from "../actions/posts";
+import PostCard from "../components/PostCard";
+import AppLayout from "../components/layout/AppLayout";
+import { useAuth } from "../hooks/useAuth";
+import { paths } from "../routes/paths";
 import type { IPost } from "../types/post";
 
-export default function PostsWithAuth() {
+export default function PostPage() {
+  const navigate = useNavigate();
+  const { isAuthenticated, login, logout, user } = useAuth(); // Usar o AuthContext
+
   const [posts, setPosts] = useState<IPost[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Estados para login dialog
+  const [loginOpen, setLoginOpen] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", senha: "" });
   const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
-  // Verifica se já tem token ao carregar
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      setIsAuthenticated(true);
-      fetchPosts();
-    }
+    fetchPosts();
   }, []);
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log("Iniciando busca de posts...");
       const postsData = await getPosts();
-      console.log("Posts recebidos:", postsData);
       setPosts(postsData);
-    } catch (err: any) {
-      console.error("Erro detalhado ao buscar posts:", err);
-      console.error("Status:", err?.response?.status);
-      console.error("Data:", err?.response?.data);
-      console.error("Message:", err?.message);
-
-      let errorMessage = "Erro ao carregar os posts. ";
-      if (err?.response?.status === 401) {
-        errorMessage += "Token de autenticação inválido ou ausente.";
-        setIsAuthenticated(false);
-        localStorage.removeItem("token");
-      } else if (err?.response?.status === 404) {
-        errorMessage += "Endpoint não encontrado.";
-      } else if (err?.response?.data?.message) {
-        errorMessage += err.response.data.message;
-      } else {
-        errorMessage += err?.message || "Tente novamente.";
-      }
-
-      setError(errorMessage);
+    } catch (err) {
+      setError("Erro ao carregar posts. Verifique sua conexão.");
+      console.error("Erro ao buscar posts:", err);
     } finally {
       setLoading(false);
     }
@@ -71,68 +54,139 @@ export default function PostsWithAuth() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginLoading(true);
+    setLoginError(null);
 
     try {
-      setLoginLoading(true);
-      setError(null);
-      console.log("Tentando fazer login...");
-
-      const result = await signIn(loginData);
-      console.log("Login realizado com sucesso:", result);
-
-      setIsAuthenticated(true);
-      await fetchPosts();
-    } catch (err: any) {
-      console.error("Erro no login:", err);
-      let errorMessage = "Erro ao fazer login. ";
-      if (err?.response?.data?.message) {
-        errorMessage += err.response.data.message;
-      } else {
-        errorMessage += err?.message || "Verifique suas credenciais.";
-      }
-      setError(errorMessage);
+      await login(loginData.email, loginData.senha);
+      setLoginOpen(false);
+      setLoginData({ email: "", senha: "" });
+    } catch (err) {
+      setLoginError(
+        err instanceof Error ? err.message : "Email ou senha inválidos.",
+      );
     } finally {
       setLoginLoading(false);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsAuthenticated(false);
-    setPosts([]);
-    setError(null);
+    logout();
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  const handleDeletePost = async (post: IPost) => {
+    if (
+      !window.confirm(`Tem certeza que deseja excluir o post "${post.titulo}"?`)
+    ) {
+      return;
+    }
+
+    try {
+      await deletePost(post.id);
+      setPosts((prevPosts) => prevPosts.filter((p) => p.id !== post.id));
+    } catch (err) {
+      setError("Erro ao excluir o post. Tente novamente.");
+      console.error("Erro ao excluir post:", err);
+    }
   };
 
-  // Tela de login
-  if (!isAuthenticated) {
-    return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Box sx={{ textAlign: "center", mb: 4 }}>
-            <Login sx={{ fontSize: "3rem", color: "primary.main", mb: 2 }} />
-            <Typography variant="h4" component="h1" gutterBottom>
-              Fazer Login
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Entre com suas credenciais para ver os posts
-            </Typography>
-          </Box>
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <Box textAlign="center" py={10}>
+          <CircularProgress size={60} />
+          <Typography mt={2}>Carregando publicações...</Typography>
+        </Box>
+      );
+    }
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {error}
-            </Alert>
+    if (error) {
+      return (
+        <Alert severity="error" sx={{ m: 3 }}>
+          {error}
+          <Button onClick={fetchPosts} size="small" sx={{ ml: 2 }}>
+            Tentar novamente
+          </Button>
+        </Alert>
+      );
+    }
+
+    if (posts.length === 0) {
+      return (
+        <Box textAlign="center" py={10}>
+          <Typography variant="h6" color="text.secondary">
+            Nenhum post encontrado.
+          </Typography>
+          {isAuthenticated && (
+            <Button
+              variant="contained"
+              onClick={() => navigate(paths.posts.create)}
+              sx={{ mt: 2 }}
+            >
+              Criar Primeiro Post
+            </Button>
           )}
+        </Box>
+      );
+    }
 
-          <Box component="form" onSubmit={handleLogin}>
+    return (
+      <Stack spacing={{ xs: 2, md: 3 }}>
+        {posts.map((post) => (
+          <Box key={post.id}>
+            <PostCard
+              post={post}
+              isProfessor={isAuthenticated && user?.isProfessor === true}
+              onView={(p) => navigate(paths.posts.details(p.id))}
+              onEdit={(p) => navigate(paths.posts.edit(p.id))}
+              onDelete={handleDeletePost}
+            />
+          </Box>
+        ))}
+      </Stack>
+    );
+  };
+
+  return (
+    <AppLayout
+      isAuthenticated={isAuthenticated}
+      onLoginClick={() => setLoginOpen(true)}
+      onLogout={handleLogout}
+      onAddPostClick={() => navigate(paths.posts.create)}
+    >
+      <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4 } }}>
+        <Box mb={4}>
+          <Typography variant="h3" component="h1" gutterBottom>
+            Blog EducaTech
+          </Typography>
+          <Typography variant="h6" color="text.secondary">
+            Compartilhando conhecimento educacional
+          </Typography>
+        </Box>
+
+        {renderContent()}
+      </Container>
+
+      {/* Login Dialog */}
+      <Dialog
+        open={loginOpen}
+        onClose={() => {
+          setLoginOpen(false);
+          setLoginError(null);
+          setLoginData({ email: "", senha: "" });
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Acesso do Professor</DialogTitle>
+        <DialogContent>
+          <Box component="form" onSubmit={handleLogin} sx={{ mt: 1 }}>
+            {loginError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {loginError}
+              </Alert>
+            )}
+
             <TextField
               fullWidth
               label="Email"
@@ -144,6 +198,7 @@ export default function PostsWithAuth() {
               margin="normal"
               required
               disabled={loginLoading}
+              autoComplete="email"
             />
 
             <TextField
@@ -157,203 +212,25 @@ export default function PostsWithAuth() {
               margin="normal"
               required
               disabled={loginLoading}
+              autoComplete="current-password"
             />
 
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              size="large"
+              sx={{ mt: 3, mb: 2, py: 1.5 }}
               disabled={loginLoading}
-              sx={{ mt: 3, mb: 2 }}
             >
-              {loginLoading ? <CircularProgress size={24} /> : "Entrar"}
+              {loginLoading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Entrar"
+              )}
             </Button>
           </Box>
-        </Paper>
-      </Container>
-    );
-  }
-
-  // Tela principal com posts
-  return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Header */}
-      <Box
-        sx={{
-          mb: 4,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Box>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              color: "primary.main",
-              mb: 1,
-            }}
-          >
-            <School sx={{ fontSize: "3rem", mr: 2, verticalAlign: "middle" }} />
-            Posts Educacionais
-          </Typography>
-          <Typography variant="h6" color="text.secondary">
-            Descubra conteúdos educacionais de qualidade
-          </Typography>
-        </Box>
-
-        <Button variant="outlined" color="secondary" onClick={handleLogout}>
-          Sair
-        </Button>
-      </Box>
-
-      <Divider sx={{ mb: 4 }} />
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-          <Button onClick={fetchPosts} size="small" sx={{ ml: 2 }}>
-            Tentar Novamente
-          </Button>
-        </Alert>
-      )}
-
-      {loading ? (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="400px"
-        >
-          <CircularProgress size={60} />
-        </Box>
-      ) : posts.length === 0 ? (
-        <Box textAlign="center" py={6}>
-          <Typography variant="h5" color="text.secondary" gutterBottom>
-            Nenhum post encontrado
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Ainda não há posts publicados.
-          </Typography>
-        </Box>
-      ) : (
-        <Grid container spacing={3}>
-          {posts.map((post) => (
-            <Grid item xs={12} md={6} lg={4} key={post.id} {...({} as any)}>
-              <Card
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  transition:
-                    "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-                  "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: (theme) => theme.shadows[8],
-                  },
-                }}
-              >
-                <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                  <Typography
-                    variant="h5"
-                    component="h2"
-                    gutterBottom
-                    sx={{
-                      fontWeight: "bold",
-                      color: "primary.main",
-                      mb: 2,
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {post.titulo}
-                  </Typography>
-
-                  {post.resumo && (
-                    <Box sx={{ mb: 2 }}>
-                      <Chip
-                        label="Resumo"
-                        size="small"
-                        color="secondary"
-                        sx={{ mb: 1 }}
-                      />
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          fontStyle: "italic",
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {post.resumo}
-                      </Typography>
-                    </Box>
-                  )}
-
-                  <Typography
-                    variant="body1"
-                    paragraph
-                    sx={{
-                      mb: 3,
-                      lineHeight: 1.6,
-                      display: "-webkit-box",
-                      WebkitBoxOrient: "vertical",
-                      WebkitLineClamp: 4,
-                      overflow: "hidden",
-                    }}
-                  >
-                    {post.conteudo}
-                  </Typography>
-
-                  <Box sx={{ mt: "auto" }}>
-                    <Divider sx={{ mb: 2 }} />
-
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      gap={2}
-                      flexWrap="wrap"
-                    >
-                      <Box display="flex" alignItems="center" gap={0.5}>
-                        <Person fontSize="small" color="action" />
-                        <Typography variant="caption" color="text.secondary">
-                          ID Professor: {post.professorId}
-                        </Typography>
-                      </Box>
-
-                      <Box display="flex" alignItems="center" gap={0.5}>
-                        <DateRange fontSize="small" color="action" />
-                        <Typography variant="caption" color="text.secondary">
-                          {formatDate(post.createdAt)}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {post.updatedAt !== post.createdAt && (
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 1, display: "block" }}
-                      >
-                        Atualizado em: {formatDate(post.updatedAt)}
-                      </Typography>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-
-      <Box sx={{ mt: 6, textAlign: "center" }}>
-        <Typography variant="body2" color="text.secondary">
-          Total de posts: {posts.length}
-        </Typography>
-      </Box>
-    </Container>
+        </DialogContent>
+      </Dialog>
+    </AppLayout>
   );
 }

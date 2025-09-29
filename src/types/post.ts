@@ -3,7 +3,7 @@ export interface IPost {
   titulo: string;
   conteudo: string;
   resumo?: string;
-  professorId: string;
-  createdAt: string;
-  updatedAt: string;
+  professor_id: string;
+  created_at: string;
+  updated_at: string;
 }
