@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import { signUp } from "../actions/auth";
 import { createPost, getPost, updatePost } from "../actions/posts";
 import AppLayout from "../components/layout/AppLayout";
 import LoginDialog from "../components/LoginDialog";
@@ -39,6 +40,7 @@ export default function PostCreateEditPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -63,18 +65,19 @@ export default function PostCreateEditPage() {
         try {
           setLoading(true);
           setError(null);
+          setIsReadOnly(false);
           const postData = await getPost(id);
-
-          if (String(postData.professor_id) !== String(user.professorId)) {
-            setError("Você não tem permissão para editar este post.");
-            return;
-          }
 
           setFormState({
             titulo: postData.titulo || "",
             resumo: postData.resumo || "",
             conteudo: postData.conteudo || "",
           });
+
+          if (String(postData.professor_id) !== String(user.professorId)) {
+            setError("Você não tem permissão para editar este post.");
+            setIsReadOnly(true);
+          }
         } catch (err) {
           console.error("Erro ao carregar post:", err);
           setError("Não foi possível carregar os dados do post para edição.");
@@ -116,6 +119,9 @@ export default function PostCreateEditPage() {
     } finally {
       setLoginLoading(false);
     }
+  };
+  const handleSignUp = async (data: { email: string; senha: string }) => {
+    await signUp(data);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -232,7 +238,7 @@ export default function PostCreateEditPage() {
           required
           margin="normal"
           variant="outlined"
-          disabled={submitting}
+          disabled={submitting || isReadOnly}
         />
         <TextField
           label="Resumo (Opcional)"
@@ -242,7 +248,7 @@ export default function PostCreateEditPage() {
           fullWidth
           margin="normal"
           variant="outlined"
-          disabled={submitting}
+          disabled={submitting || isReadOnly}
           helperText="Um breve resumo do seu post"
         />
         <TextField
@@ -256,14 +262,14 @@ export default function PostCreateEditPage() {
           rows={12}
           margin="normal"
           variant="outlined"
-          disabled={submitting}
+          disabled={submitting || isReadOnly}
           helperText="Escreva o conteúdo completo do seu post"
         />
         <Button
           type="submit"
           variant="contained"
           color="primary"
-          disabled={submitting}
+          disabled={submitting || isReadOnly}
           fullWidth
           sx={{ mt: 3, py: 1.5, fontSize: "1rem" }}
         >
@@ -344,6 +350,7 @@ export default function PostCreateEditPage() {
         setLoginData={setLoginData}
         loading={loginLoading}
         error={loginError}
+        onSignUp={handleSignUp}
       />
     </AppLayout>
   );

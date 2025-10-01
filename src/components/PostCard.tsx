@@ -22,6 +22,7 @@ interface PostCardProps {
   onView: (post: IPost) => void;
   onEdit?: (post: IPost) => void;
   onDelete?: (post: IPost) => void;
+  currentProfessorId?: number | null;
 }
 
 export default function PostCard({
@@ -30,9 +31,15 @@ export default function PostCard({
   onView,
   onEdit,
   onDelete,
+  currentProfessorId,
 }: PostCardProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { professorName, isLoading } = useProfessorName(post.professor_id);
+
+  const isOwner =
+    isProfessor &&
+    currentProfessorId &&
+    String(post.professor_id) === String(currentProfessorId);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -141,7 +148,7 @@ export default function PostCard({
           <MenuItem onClick={() => handleAction(onView)}>
             <Visibility fontSize="small" sx={{ mr: 1.5 }} /> Ver post
           </MenuItem>
-          {isProfessor && [
+          {isOwner && [
             <Divider key="divider" />,
             <MenuItem key="edit" onClick={() => handleAction(onEdit)}>
               <Edit fontSize="small" sx={{ mr: 1.5 }} /> Editar

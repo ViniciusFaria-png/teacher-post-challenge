@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
+import { signUp } from "../actions/auth";
 import { getPost } from "../actions/posts";
 import AppLayout from "../components/layout/AppLayout";
 import LoginDialog from "../components/LoginDialog";
@@ -77,6 +78,10 @@ export default function PostDetailPage() {
     } finally {
       setLoginLoading(false);
     }
+  };
+
+  const handleSignUp = async (data: { email: string; senha: string }) => {
+    await signUp(data);
   };
 
   const formatDate = (dateString: string) => {
@@ -185,6 +190,7 @@ export default function PostDetailPage() {
         setLoginData={setLoginData}
         loading={loginLoading}
         error={loginError}
+        onSignUp={handleSignUp}
       />
     </AppLayout>
   );
