@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { signUp } from "../actions/auth";
 import { deletePost, getPosts, searchPosts } from "../actions/posts";
 import LoginDialog from "../components/LoginDialog";
 import PostCard from "../components/PostCard";
@@ -96,6 +97,10 @@ export default function PostPage() {
     } finally {
       setLoginLoading(false);
     }
+  };
+
+  const handleSignUp = async (data: { email: string; senha: string }) => {
+    await signUp(data);
   };
 
   const handleLogout = () => {
@@ -186,6 +191,7 @@ export default function PostPage() {
               <PostCard
                 post={post}
                 isProfessor={isAuthenticated && user?.isProfessor === true}
+                currentProfessorId={user?.professorId}
                 onView={(p) => navigate(paths.posts.details(p.id))}
                 onEdit={(p) => navigate(paths.posts.edit(p.id))}
                 onDelete={handleDeletePost}
@@ -239,10 +245,12 @@ export default function PostPage() {
       <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4 } }}>
         <Box mb={4}>
           <Typography variant="h3" component="h1" gutterBottom>
-            Blog EducaTech
+            {user?.isProfessor ? "Tela Administrativa" : "Blog EducaTech"}
           </Typography>
           <Typography variant="h6" color="text.secondary">
-            Compartilhando conhecimento educacional
+            {user?.isProfessor
+              ? "Bem vindo professor, aqui você pode gerenciar seus posts."
+              : "Compartilhando conhecimento educacional"}
           </Typography>
         </Box>
 
@@ -271,6 +279,7 @@ export default function PostPage() {
         setLoginData={setLoginData}
         loading={loginLoading}
         error={loginError}
+        onSignUp={handleSignUp}
       />
     </AppLayout>
   );
