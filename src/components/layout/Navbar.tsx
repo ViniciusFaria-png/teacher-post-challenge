@@ -14,12 +14,14 @@ import { paths } from "../../routes/paths";
 
 interface NavbarProps {
   isAuthenticated: boolean;
+  isProfessor?: boolean;
   onLoginClick: () => void;
   onLogout: () => void;
 }
 
 export default function Navbar({
   isAuthenticated,
+  isProfessor = false,
   onLoginClick,
   onLogout,
 }: NavbarProps) {
@@ -30,7 +32,7 @@ export default function Navbar({
   };
 
   return (
-    <AppBar position="sticky">
+    <AppBar position="sticky" elevation={0}>
       <Container maxWidth="lg">
         <Toolbar disableGutters>
           <School sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
@@ -77,35 +79,47 @@ export default function Navbar({
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             {isAuthenticated ? (
               <>
-                <Button
-                  color="inherit"
-                  onClick={handleAddPostClick}
-                  startIcon={<Add />}
-                  sx={{ display: { xs: "none", sm: "inline-flex" } }}
-                >
-                  Adicionar Post
-                </Button>
+                {isProfessor && (
+                  <>
+                    <Button
+                      color="inherit"
+                      onClick={handleAddPostClick}
+                      startIcon={<Add />}
+                      sx={{ display: { xs: "none", sm: "inline-flex" } }}
+                    >
+                      Adicionar Post
+                    </Button>
+
+                    <Tooltip title="Adicionar Post">
+                      <IconButton
+                        color="inherit"
+                        onClick={handleAddPostClick}
+                        sx={{ display: { xs: "flex", sm: "none" } }}
+                      >
+                        <Add />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                )}
+
                 <Button
                   color="inherit"
                   onClick={onLogout}
                   startIcon={<Logout />}
                   sx={{ display: { xs: "none", sm: "inline-flex" } }}
                 >
-                  Logout
+                  Sair
                 </Button>
 
-                <Box sx={{ display: { xs: "flex", sm: "none" }, gap: 1 }}>
-                  <Tooltip title="Adicionar Post">
-                    <IconButton color="inherit" onClick={handleAddPostClick}>
-                      <Add />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Logout">
-                    <IconButton color="inherit" onClick={onLogout}>
-                      <Logout />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
+                <Tooltip title="Sair">
+                  <IconButton
+                    color="inherit"
+                    onClick={onLogout}
+                    sx={{ display: { xs: "flex", sm: "none" } }}
+                  >
+                    <Logout />
+                  </IconButton>
+                </Tooltip>
               </>
             ) : (
               <>

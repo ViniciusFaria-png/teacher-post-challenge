@@ -6,6 +6,7 @@ import Navbar from "./Navbar";
 interface AppLayoutProps {
   children: React.ReactNode;
   isAuthenticated: boolean;
+  isProfessor?: boolean;
   onLoginClick: () => void;
   onLogout: () => void;
   onAddPostClick: () => void;
@@ -14,6 +15,7 @@ interface AppLayoutProps {
 export default function AppLayout({
   children,
   isAuthenticated,
+  isProfessor = false,
   onLoginClick,
   onLogout,
 }: AppLayoutProps) {
@@ -27,6 +29,7 @@ export default function AppLayout({
     >
       <Navbar
         isAuthenticated={isAuthenticated}
+        isProfessor={isProfessor}
         onLoginClick={onLoginClick}
         onLogout={onLogout}
       />

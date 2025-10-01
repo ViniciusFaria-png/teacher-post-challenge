@@ -4,6 +4,7 @@ import {
   Button,
   CircularProgress,
   Container,
+  Pagination,
   Stack,
   TextField,
   Typography,
@@ -18,6 +19,8 @@ import { useAuth } from "../hooks/useAuth";
 import { paths } from "../routes/paths";
 import type { IPost } from "../types/post";
 
+const POSTS_PER_PAGE = 5;
+
 export default function PostPage() {
   const navigate = useNavigate();
   const { isAuthenticated, login, logout, user } = useAuth();
@@ -26,6 +29,7 @@ export default function PostPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Estados para login dialog
   const [loginOpen, setLoginOpen] = useState(false);
@@ -42,7 +46,13 @@ export default function PostPage() {
       setLoading(true);
       setError(null);
       const postsData = await getPosts();
-      setPosts(postsData);
+      const sortedPosts = postsData.sort((a: IPost, b: IPost) => {
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      });
+      setPosts(sortedPosts);
+      setCurrentPage(1);
     } catch (err) {
       setError("Erro ao carregar posts. Verifique sua conexão.");
       console.error("Erro ao buscar posts:", err);
@@ -60,6 +70,7 @@ export default function PostPage() {
         const postsData =
           query.length === 0 ? await getPosts() : await searchPosts(query);
         setPosts(postsData);
+        setCurrentPage(1);
       } catch (err) {
         setError("Erro ao buscar posts. Tente novamente.");
         console.error("Erro ao buscar posts:", err);
@@ -100,12 +111,32 @@ export default function PostPage() {
 
     try {
       await deletePost(post.id);
-      setPosts((prevPosts) => prevPosts.filter((p) => p.id !== post.id));
+      setPosts((prevPosts) => {
+        const newPosts = prevPosts.filter((p) => p.id !== post.id);
+        const totalPages = Math.ceil(newPosts.length / POSTS_PER_PAGE);
+        if (currentPage > totalPages && totalPages > 0) {
+          setCurrentPage(totalPages);
+        }
+        return newPosts;
+      });
     } catch (err) {
       setError("Erro ao excluir o post. Tente novamente.");
       console.error("Erro ao excluir post:", err);
     }
   };
+
+  const handlePageChange = (
+    _event: React.ChangeEvent<unknown>,
+    value: number,
+  ) => {
+    setCurrentPage(value);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const indexOfLastPost = currentPage * POSTS_PER_PAGE;
+  const indexOfFirstPost = indexOfLastPost - POSTS_PER_PAGE;
+  const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
 
   const renderContent = () => {
     if (loading) {
@@ -148,19 +179,52 @@ export default function PostPage() {
     }
 
     return (
-      <Stack spacing={{ xs: 2, md: 3 }}>
-        {posts.map((post) => (
-          <Box key={post.id}>
-            <PostCard
-              post={post}
-              isProfessor={isAuthenticated && user?.isProfessor === true}
-              onView={(p) => navigate(paths.posts.details(p.id))}
-              onEdit={(p) => navigate(paths.posts.edit(p.id))}
-              onDelete={handleDeletePost}
-            />
+      <>
+        <Stack spacing={{ xs: 2, md: 3 }}>
+          {currentPosts.map((post) => (
+            <Box key={post.id}>
+              <PostCard
+                post={post}
+                isProfessor={isAuthenticated && user?.isProfessor === true}
+                onView={(p) => navigate(paths.posts.details(p.id))}
+                onEdit={(p) => navigate(paths.posts.edit(p.id))}
+                onDelete={handleDeletePost}
+              />
+            </Box>
+          ))}
+        </Stack>
+
+        {totalPages > 1 && (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            mt={4}
+            mb={2}
+          >
+            <Stack spacing={2} alignItems="center">
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                size="large"
+                showFirstButton
+                showLastButton
+                sx={{
+                  "& .MuiPagination-ul": {
+                    flexWrap: "nowrap",
+                  },
+                }}
+              />
+              <Typography variant="body2" color="text.secondary">
+                Página {currentPage} de {totalPages} • {posts.length}{" "}
+                {posts.length === 1 ? "post" : "posts"} no total
+              </Typography>
+            </Stack>
           </Box>
-        ))}
-      </Stack>
+        )}
+      </>
     );
   };
 
@@ -170,6 +234,7 @@ export default function PostPage() {
       onLoginClick={() => setLoginOpen(true)}
       onLogout={handleLogout}
       onAddPostClick={() => navigate(paths.posts.create)}
+      isProfessor={user?.isProfessor || false}
     >
       <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4 } }}>
         <Box mb={4}>

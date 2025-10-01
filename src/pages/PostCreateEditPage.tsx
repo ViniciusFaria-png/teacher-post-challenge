@@ -311,12 +311,12 @@ export default function PostCreateEditPage() {
               : "Preencha os campos abaixo para compartilhar um novo conteúdo."}
           </Typography>
 
-          {user && (
+          {/* {user && (
             <Alert severity="info" sx={{ mb: 2 }}>
               Logado como: {user.email} | Professor ID: {user.professorId} | É
               Professor: {user.isProfessor ? "Sim" : "Não"}
             </Alert>
-          )}
+          )} */}
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>

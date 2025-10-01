@@ -26,7 +26,6 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados para login dialog
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", senha: "" });
   const [loginLoading, setLoginLoading] = useState(false);
