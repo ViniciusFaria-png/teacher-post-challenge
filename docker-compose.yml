@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_SERVER_URL: ${VITE_SERVER_URL}
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    container_name: blog-educatech-frontend
+    environment:
+      - NODE_ENV=production
+    networks:
+      - educatech-network
+
+networks:
+  educatech-network:
+    driver: bridge
