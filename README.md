@@ -72,7 +72,7 @@ npm run preview  # Inicia um servidor de pré-visualização da build de produç
 - **Roteamento**: React Router 7.8.2
 
 
-###Integração com Backend
+### Integração com Backend
 - **API**: Integração com API RESTful
 
 - **Serviço Externo**: https://blog-dinamico-app.onrender.com
