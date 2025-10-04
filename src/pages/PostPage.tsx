@@ -32,21 +32,36 @@ export default function PostPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Novo estado para controlar o modo de visualização
+  const [viewAsGuest, setViewAsGuest] = useState(false);
+
   // Estados para login dialog
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", senha: "" });
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
+  // Flag para determinar se a visão de professor está ativa
+  const isProfessorView = user?.isProfessor && !viewAsGuest;
+
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [user, viewAsGuest]); // Adicionado viewAsGuest para recarregar os posts ao mudar o modo
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
       setError(null);
-      const postsData = await getPosts();
+      let postsData = await getPosts();
+
+      // Aplica o filtro apenas se estiver na visão de professor
+      if (isProfessorView && user?.professorId) {
+        postsData = postsData.filter(
+          (post: IPost) =>
+            String(post.professor_id) === String(user.professorId),
+        );
+      }
+
       const sortedPosts = postsData.sort((a: IPost, b: IPost) => {
         return (
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -68,8 +83,16 @@ export default function PostPage() {
       try {
         setLoading(true);
         setError(null);
-        const postsData =
+        let postsData =
           query.length === 0 ? await getPosts() : await searchPosts(query);
+
+        // Aplica o filtro na busca também
+        if (isProfessorView && user?.professorId) {
+          postsData = postsData.filter(
+            (post: IPost) =>
+              String(post.professor_id) === String(user.professorId),
+          );
+        }
         setPosts(postsData);
         setCurrentPage(1);
       } catch (err) {
@@ -168,7 +191,9 @@ export default function PostPage() {
       return (
         <Box textAlign="center" py={10}>
           <Typography variant="h6" color="text.secondary">
-            Nenhum post encontrado.
+            {isProfessorView
+              ? "Você ainda não criou nenhum post."
+              : "Nenhum post encontrado."}
           </Typography>
           {isAuthenticated && (
             <Button
@@ -190,7 +215,7 @@ export default function PostPage() {
             <Box key={post.id}>
               <PostCard
                 post={post}
-                isProfessor={isAuthenticated && user?.isProfessor === true}
+                isProfessor={Boolean(isAuthenticated && isProfessorView)}
                 currentProfessorId={user?.professorId}
                 onView={(p) => navigate(paths.posts.details(p.id))}
                 onEdit={(p) => navigate(paths.posts.edit(p.id))}
@@ -242,30 +267,47 @@ export default function PostPage() {
       onAddPostClick={() => navigate(paths.posts.create)}
       isProfessor={user?.isProfessor || false}
     >
-      <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4 } }}>
-        <Box mb={4}>
-          <Typography variant="h3" component="h1" gutterBottom>
-            {user?.isProfessor ? "Tela Administrativa" : "Blog EducaTech"}
-          </Typography>
-          <Typography variant="h6" color="text.secondary">
-            {user?.isProfessor
-              ? "Bem vindo professor, aqui você pode gerenciar seus posts."
-              : "Compartilhando conhecimento educacional"}
-          </Typography>
-        </Box>
+      <Box
+        sx={{
+          flexGrow: 1,
+          backgroundColor: isProfessorView ? "#e0e0e0" : "transparent",
+          transition: "background-color 0.3s ease",
+        }}
+      >
+        <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4 } }}>
+          <Box mb={4}>
+            <Typography variant="h3" component="h1" gutterBottom>
+              {isProfessorView ? "Tela Administrativa" : "Blog EducaTech"}
+            </Typography>
+            <Typography variant="h6" color="text.secondary">
+              {isProfessorView
+                ? "Bem vindo professor, aqui você pode gerenciar seus posts."
+                : "Compartilhando conhecimento educacional"}
+            </Typography>
+          </Box>
 
-        <Box mb={4}>
-          <TextField
-            fullWidth
-            label="Buscar por posts"
-            variant="outlined"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-        </Box>
+          <Stack direction="row" spacing={2} mb={4} alignItems="center">
+            <TextField
+              fullWidth
+              label="Buscar por posts"
+              variant="outlined"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+            {user?.isProfessor && (
+              <Button
+                variant="outlined"
+                onClick={() => setViewAsGuest(!viewAsGuest)}
+                sx={{ whiteSpace: "nowrap" }}
+              >
+                {viewAsGuest ? "Visão do Professor" : "Ver como Visitante"}
+              </Button>
+            )}
+          </Stack>
 
-        {renderContent()}
-      </Container>
+          {renderContent()}
+        </Container>
+      </Box>
 
       <LoginDialog
         open={loginOpen}
