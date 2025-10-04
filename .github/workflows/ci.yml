@@ -51,7 +51,7 @@ jobs:
     steps:
       - name: Deployment notice
         run: |
-          echo "✅ All checks passed!"
-          echo "🚀 Automatic deployment to Vercel will be triggered"
-          echo "📦 Build artifacts are ready"
-          echo "ℹ️  Environment variables will be injected by Vercel"
+          echo " All checks passed!"
+          echo " Automatic deployment to Vercel will be triggered"
+          echo " Build artifacts are ready"
+          echo "ℹ  Environment variables will be injected by Vercel"
