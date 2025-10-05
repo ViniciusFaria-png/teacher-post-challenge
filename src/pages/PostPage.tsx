@@ -32,21 +32,18 @@ export default function PostPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Novo estado para controlar o modo de visualização
   const [viewAsGuest, setViewAsGuest] = useState(false);
 
-  // Estados para login dialog
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", senha: "" });
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  // Flag para determinar se a visão de professor está ativa
   const isProfessorView = user?.isProfessor && !viewAsGuest;
 
   useEffect(() => {
     fetchPosts();
-  }, [user, viewAsGuest]); // Adicionado viewAsGuest para recarregar os posts ao mudar o modo
+  }, [user, viewAsGuest]);
 
   const fetchPosts = async () => {
     try {
@@ -54,7 +51,6 @@ export default function PostPage() {
       setError(null);
       let postsData = await getPosts();
 
-      // Aplica o filtro apenas se estiver na visão de professor
       if (isProfessorView && user?.professorId) {
         postsData = postsData.filter(
           (post: IPost) =>
@@ -86,7 +82,6 @@ export default function PostPage() {
         let postsData =
           query.length === 0 ? await getPosts() : await searchPosts(query);
 
-        // Aplica o filtro na busca também
         if (isProfessorView && user?.professorId) {
           postsData = postsData.filter(
             (post: IPost) =>
